@@ -7,5 +7,5 @@
 - [x] Googleカレンダー予定作成
 - [x] JSONバックアップ・復元
 - [x] オフラインキャッシュ
-- [ ] iPhoneからアクセスできるHTTPS配信方法を決定
+- [x] GitHub PagesでHTTPS配信
 - [ ] 実機Safariとホーム画面追加で動作確認
