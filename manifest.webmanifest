@@ -1,0 +1,4 @@
+{
+  "name":"くすりログ","short_name":"くすりログ","start_url":"./","display":"standalone",
+  "background_color":"#f5f7f6","theme_color":"#0f766e","lang":"ja","description":"服薬・通院・症状経過を端末内に記録するアプリ"
+}

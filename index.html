@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0f766e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="くすりログ">
+  <title>くすりログ</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header><div><small id="today-label"></small><h1 id="page-title">今日</h1></div><button id="add-button" class="icon-button" aria-label="追加">＋</button></header>
+  <main id="app"></main>
+  <nav aria-label="メインメニュー">
+    <button data-tab="today" class="active"><span>✓</span>今日</button>
+    <button data-tab="medications"><span>◉</span>薬</button>
+    <button data-tab="appointments"><span>□</span>通院</button>
+    <button data-tab="journal"><span>✎</span>経過</button>
+    <button data-tab="settings"><span>⚙</span>設定</button>
+  </nav>
+  <dialog id="editor"><form id="editor-form" method="dialog"><div class="dialog-head"><button type="button" id="cancel-editor">キャンセル</button><h2 id="editor-title"></h2><button type="submit">保存</button></div><div id="editor-fields"></div></form></dialog>
+  <input id="backup-input" type="file" accept="application/json" hidden>
+  <script src="app.js"></script>
+</body>
+</html>
