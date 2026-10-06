@@ -13,3 +13,5 @@
 - [x] オフラインキャッシュ
 - [x] GitHub PagesでHTTPS配信
 - [ ] 実機Safariとホーム画面追加で動作確認
+- [ ] `docs/briefs/20261006-ios-style-today-history.md` を Codex に実装させ、受け入れ条件をブラウザで確認する（iOS 標準風の見た目・今日画面・体調記録と推移・履歴・削除）
+- [ ] Web 版の改訂が確定したら、同じ要件の iPhone 版（`../KusuriLog`）向けブリーフを書く
