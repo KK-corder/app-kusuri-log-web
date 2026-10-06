@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#0f766e">
+  <meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="くすりログ">
@@ -15,13 +16,13 @@
   <header><div><small id="today-label"></small><h1 id="page-title">今日</h1></div><button id="add-button" class="icon-button" aria-label="追加">＋</button></header>
   <main id="app"></main>
   <nav aria-label="メインメニュー">
-    <button data-tab="today" class="active"><span>✓</span>今日</button>
-    <button data-tab="medications"><span>◉</span>薬</button>
-    <button data-tab="appointments"><span>□</span>通院</button>
-    <button data-tab="journal"><span>✎</span>経過</button>
-    <button data-tab="settings"><span>⚙</span>設定</button>
+    <button data-tab="today" class="active"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="m8 12 3 3 5-6"/></svg>今日</button>
+    <button data-tab="medications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 4-4 4a5.7 5.7 0 0 0 8 8l4-4a5.7 5.7 0 0 0-8-8Z"/><path d="m6 6 8 8m3 4h4m-2-2v4"/></svg>薬</button>
+    <button data-tab="appointments"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 10h18m-9 3v5m-2.5-2.5h5"/></svg>通院</button>
+    <button data-tab="journal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18M6 15l4-5 4 3 6-8"/></svg>経過</button>
+    <button data-tab="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="8" cy="18" r="2"/></svg>設定</button>
   </nav>
-  <dialog id="editor"><form id="editor-form" method="dialog"><div class="dialog-head"><button type="button" id="cancel-editor">キャンセル</button><h2 id="editor-title"></h2><button type="submit">保存</button></div><div id="editor-fields"></div></form></dialog>
+  <dialog id="editor" aria-labelledby="editor-title"><form id="editor-form" method="dialog"><div class="dialog-head"><button type="button" id="cancel-editor">キャンセル</button><h2 id="editor-title"></h2><button type="submit">保存</button></div><div id="editor-fields"></div></form></dialog>
   <input id="backup-input" type="file" accept="application/json" hidden>
   <script src="app.js"></script>
 </body>
