@@ -14,6 +14,6 @@
 - [x] GitHub PagesでHTTPS配信
 - [ ] 実機Safariとホーム画面追加で動作確認
 - [x] ~~`docs/briefs/20261006-ios-style-today-history.md` を Codex に実装させ、受け入れ条件をブラウザで確認する~~ → 2026-10-06 実装・ヘッドレス Chrome で 23 項目通過（`b24ff78`）。未 push
-- [ ] 改訂版をローカル（`http://127.0.0.1:8080/KusuriLogWeb/`）で触って、見た目と操作の修正点を決める
-- [ ] 修正点が片付いたら push して公開版に反映する（ユーザー確認のうえ）
+- [x] ~~push して公開版に反映する~~ → 2026-10-06 push（`a57be99`）、GitHub Pages build は `built`
+- [ ] iPhone のホーム画面版で「書き出す」でバックアップを取り、開き直して新しい画面と既存の記録が表示されることを確認する
 - [ ] Web 版の改訂が確定したら、同じ要件の iPhone 版（`../KusuriLog`）向けブリーフを書く
