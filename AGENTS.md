@@ -1,6 +1,6 @@
 # くすりログ Web版
 
-Dev 共通ルール: `/Users/kakeru/Dev/_rules/agent_management.md`・`collaboration.md`（Claude はリード、Codex は実装）
+Dev 共通ルール: `/Users/kakeru/Dev/_system/rules/agent_management.md`・`collaboration.md`（Claude はリード、Codex は実装）
 Claude は `_rules/claude.md`、Codex は `_rules/codex.md` も読む。
 作業開始時に `README.md`・`_TODO.md`・`_handoff.md` を読む。状態: 公開済み・保守モード。
 

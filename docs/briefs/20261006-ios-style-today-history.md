@@ -2,7 +2,7 @@
 
 > 種別: 機能追加・変更。Claude が作成し Codex に渡す実装仕様。WHAT と受け入れ条件を書く。HOW（実装手順）は Codex に委ねる。
 
-- **プロジェクト**: `/Users/kakeru/Dev/KusuriLogWeb`
+- **プロジェクト**: `/Users/kakeru/Dev/4_アプリ/KusuriLogWeb`
 - **出典**: 2026-10-06 ユーザー依頼「薬ログをもっと改訂したい」。対話で確定した要件:
   使えていない一番の理由は「見た目・使い心地が気に入らない」。見た目は iOS 標準アプリ風。
   今日画面に「残量と次回通院」「体調のワンタップ記録」「取り消しと未記録の表示」。入力まわりは「削除と取り消し」「過去の服用履歴」。
@@ -136,7 +136,7 @@ iOS の標準アプリ（設定・リマインダー・ヘルスケア）に見�
   - 通院画面からの薬の新規登録、処方分を残量に足す機能
   - 医療費の月別・年別集計
   - 通知・リマインダー、設定画面の「通知に薬名を表示」の変更
-  - iPhone 版（`/Users/kakeru/Dev/KusuriLog`）への反映
+  - iPhone 版（`/Users/kakeru/Dev/4_アプリ/KusuriLog`）への反映
   - README・`_TODO.md`・`_handoff.md` の更新（Claude が行う）
 
 ## 受け入れ条件（これが観測できたら完了）
@@ -173,8 +173,8 @@ iOS の標準アプリ（設定・リマインダー・ヘルスケア）に見�
 ```bash
 cd /Users/kakeru/Dev && python3 -m http.server 8080
 # → http://localhost:8080/KusuriLogWeb/
-node --check /Users/kakeru/Dev/KusuriLogWeb/app.js
-git -C /Users/kakeru/Dev/KusuriLogWeb diff --check
+node --check /Users/kakeru/Dev/4_アプリ/KusuriLogWeb/app.js
+git -C /Users/kakeru/Dev/4_アプリ/KusuriLogWeb diff --check
 ```
 
 旧データ（version 3 形式・架空の内容。`kind` のない薬や料金のない通院など、version 3 より前の形も混ぜてある）は、ブラウザのコンソールで次を実行してから再読み込みする。
