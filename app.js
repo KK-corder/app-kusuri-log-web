@@ -2,6 +2,7 @@ const STORE_KEY = 'kusuri-log-web-v1';
 const emptyStore = () => ({version:4, medications:[], doseLogs:[], appointments:[], journal:[], settings:{showNotificationDetails:false}});
 let store = loadStore(), tab = 'today', editing = null;
 let selectedDay = dayKey(new Date()), followToday = true, chartDays = 30;
+let journalView = 'condition', doseMedication = '', doseHistoryDays = 14;
 const $ = s => document.querySelector(s), app = $('#app'), dialog = $('#editor'), form = $('#editor-form');
 const uuid = () => crypto.randomUUID();
 const esc = v => String(v ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;'}[c]));
@@ -74,7 +75,7 @@ function render() {
   });
   const titles = {today:'今日', medications:'薬', appointments:'通院', journal:'経過', settings:'設定'};
   $('#page-title').textContent = titles[tab];
-  $('#add-button').hidden = tab === 'today' || tab === 'settings';
+  $('#add-button').hidden = tab === 'today' || tab === 'settings' || (tab === 'journal' && journalView === 'dose');
   $('#today-label').textContent = new Intl.DateTimeFormat('ja-JP', {month:'long', day:'numeric', weekday:'short'}).format(new Date());
   ({today:renderToday, medications:renderMedications, appointments:renderAppointments, journal:renderJournal, settings:renderSettings})[tab]();
 }
@@ -115,7 +116,7 @@ function asNeededRows(isToday) {
   return ids.map(id => {
     const m = meds.find(m => m.id === id), records = logs.filter(l => l.medicationID === id)
       .sort((a, b) => new Date(b.completedAt)-new Date(a.completedAt));
-    return `<article class="list-row">${m ? `<div class="row"><div class="grow"><h3>${esc(m.name)}</h3><div class="meta">${doseDescription(m)}・残り ${esc(m.stock)}${esc(m.unit)}</div></div>${button('服用した', 'as-needed', id, 'primary')}</div>` : ''}${records.map(l => `<div class="record-row"><div class="grow"><h3>${esc(l.name)}</h3><div class="meta">${doseDescription(l)}</div><span>${timeText(l.completedAt)}</span></div>${button('取り消す', 'undo-dose', l.id)}</div>`).join('')}</article>`;
+    return `<article class="list-row">${m ? `<div class="row"><div class="grow"><h3>${esc(m.name)}</h3><div class="meta">${doseDescription(m)}・残り ${esc(m.stock)}${esc(m.unit)}</div></div>${button('服用した', 'as-needed', id, 'primary')}</div>` : ''}${records.map(l => `<div class="record-row"><div class="grow"><h3>${esc(l.name)}</h3><div class="meta">${doseDescription(l)}</div><span>${timeText(l.completedAt)}${l.status === 'skipped' ? ' 見送り' : ''}</span></div>${button('取り消す', 'undo-dose', l.id)}</div>`).join('')}</article>`;
   }).join('');
 }
 function lowStockRows() {
@@ -165,6 +166,20 @@ function undoDose(id) {
   if (m && log.status === 'taken') m.stock = Number((Number(m.stock)+Number(log.stockReduction ?? m.dose)).toFixed(10));
   store.doseLogs = store.doseLogs.filter(l => l.id !== id);
   save(); render();
+}
+function updateDose(id, completedAt, status) {
+  const log = store.doseLogs.find(l => l.id === id);
+  if (!log || !['taken', 'skipped'].includes(status)) return;
+  if (log.status !== status) {
+    const m = store.medications.find(m => m.id === log.medicationID);
+    if (m && log.status === 'taken') m.stock = Number((Number(m.stock)+Number(log.stockReduction ?? m.dose)).toFixed(10));
+    const before = Number(m?.stock || 0);
+    const after = m && status === 'taken' ? Math.max(0, Number((before-Number(m.dose)).toFixed(10))) : before;
+    if (m) m.stock = after;
+    log.stockReduction = before-after;
+  }
+  log.completedAt = completedAt;
+  log.status = status;
 }
 function prescriptionHistory(medicationID) {
   return store.appointments.filter(a => a.medicationIDs.includes(medicationID)).sort((a, b) => new Date(b.date)-new Date(a.date));
@@ -217,9 +232,45 @@ function conditionChart() {
   return `<svg class="condition-chart" viewBox="0 0 344 200" role="img" aria-label="直近${chartDays}日間の体調。記録のある${points.length}日の日別平均"><title>体調の日別平均（1〜5）</title>${ticks}${lines}${dots}<text x="30" y="190" text-anchor="start">${label(shiftedDay(today, 1-chartDays))}</text><text x="320" y="190" text-anchor="end">${label(today)}</text></svg>`;
 }
 function renderJournal() {
+  const switcher = `<div class="segmented" aria-label="経過の種類">${[['condition','体調'],['dose','服用']].map(([view, label]) => button(label, 'journal-view', view, journalView === view ? 'selected' : '', `aria-pressed="${journalView === view}"`)).join('')}</div>`;
+  if (journalView === 'dose') { app.innerHTML = switcher + doseHistory(); return; }
   const values = [...store.journal].sort((a, b) => new Date(b.date)-new Date(a.date));
-  app.innerHTML = section('体調の推移', `<div class="segmented" aria-label="表示期間">${[[14,'2週間'],[30,'1か月'],[90,'3か月']].map(([days, label]) => button(label, 'chart-days', days, chartDays === days ? 'selected' : '', `aria-pressed="${chartDays === days}"`)).join('')}</div>${conditionChart()}`) +
+  app.innerHTML = switcher + section('体調の推移', `<div class="segmented" aria-label="表示期間">${[[14,'2週間'],[30,'1か月'],[90,'3か月']].map(([days, label]) => button(label, 'chart-days', days, chartDays === days ? 'selected' : '', `aria-pressed="${chartDays === days}"`)).join('')}</div>${conditionChart()}`) +
     (values.length ? section('記録', values.map(x => `<article class="list-row editable" ${editable('journal', x.id)}><div class="row"><div class="grow"><h3>${dateText(x.date)}</h3><div class="condition">体調 ${esc(x.condition)}/5</div></div><span class="edit-label">編集</span></div>${x.symptoms ? `<p>${esc(x.symptoms)}</p>` : ''}<div class="meta">${esc(x.note)}</div></article>`).join('')) : empty('経過記録はありません', '右上の＋から記録してください'));
+}
+function doseHistoryRow(log) {
+  const date = new Date(log.completedAt);
+  const recordedDay = log.scheduledDay === dayKey(date) ? '' : `<div class="meta">${date.getMonth()+1}/${date.getDate()} に記録</div>`;
+  const kind = log.asNeeded ? '頓服' : `予定 ${log.scheduledTime.replace(/^0/, '')}`;
+  return `<article class="list-row editable" ${editable('dose', log.id)}><div class="row"><div class="time">${timeText(date)}</div><div class="grow"><h3>${esc(log.name)}</h3><div class="meta">${doseDescription(log)}・${esc(kind)}</div>${recordedDay}<div class="status">${log.status === 'taken' ? '服用' : '見送り'}</div></div><span class="edit-label">編集</span></div></article>`;
+}
+function doseHistory() {
+  const logs = store.doseLogs.filter(l => l.status === 'taken' || l.status === 'skipped')
+    .sort((a, b) => dayDate(b.scheduledDay)-dayDate(a.scheduledDay) || new Date(b.completedAt)-new Date(a.completedAt));
+  const medications = new Map();
+  logs.forEach(l => { if (!medications.has(l.medicationID)) medications.set(l.medicationID, l.name); });
+  if (!medications.has(doseMedication)) doseMedication = '';
+  const picker = section('服用の記録', `<label class="field">薬で絞り込む<select id="dose-medication"><option value="">すべて</option>${[...medications].map(([id, name]) => `<option value="${esc(id)}" ${doseMedication === id ? 'selected' : ''}>${esc(name)}</option>`).join('')}</select></label>`);
+  const filtered = logs.filter(l => !doseMedication || l.medicationID === doseMedication);
+  const from = dayDate(shiftedDay(dayKey(new Date()), 1-doseHistoryDays)), groups = new Map();
+  filtered.filter(l => dayDate(l.scheduledDay) >= from).forEach(l => {
+    if (!groups.has(l.scheduledDay)) groups.set(l.scheduledDay, []);
+    groups.get(l.scheduledDay).push(l);
+  });
+  const daySchedules = day => schedules(day).filter(r => !doseMedication || (r.log?.medicationID ?? r.m?.id) === doseMedication);
+  for (let i = 0; i < doseHistoryDays; i++) {
+    const day = shiftedDay(dayKey(new Date()), -i);
+    if (!groups.has(day) && daySchedules(day).length) groups.set(day, []);
+  }
+  const days = [...groups].sort(([a], [b]) => dayDate(b)-dayDate(a)).map(([day, records]) => {
+    const date = dayDate(day), rows = daySchedules(day);
+    const label = `${date.getMonth()+1}月${date.getDate()}日（${'日月火水木金土'[date.getDay()]}）`;
+    const count = doseMedication && !rows.length ? `${records.filter(l => l.status === 'taken').length} 回` :
+      `${rows.filter(r => r.log?.status === 'taken').length} / ${rows.length} 回`;
+    return section(`${label}　${count}`, records.length ? records.map(doseHistoryRow).join('') : '<div class="list-row">記録なし</div>');
+  }).join('');
+  return (logs.length ? picker : empty('服用の記録はまだありません')) + (days || (logs.length ? empty('この期間の服用の記録はありません') : '')) +
+    (filtered.some(l => dayDate(l.scheduledDay) < from) ? button('もっと見る', 'more-doses') : '');
 }
 function renderSettings() {
   app.innerHTML = section('通知', `<label class="list-row setting"><div><h3>通知に薬名を表示</h3><div class="meta">Web版の通知は補助機能です</div></div><input id="notification-details" type="checkbox" ${store.settings.showNotificationDetails ? 'checked' : ''}></label>`) +
@@ -239,7 +290,7 @@ function medicationPicker(selected = []) {
 }
 function openEditor(type, value = null) {
   editing = {type, id:value?.id, original:value};
-  const titles = {medication:value ? '薬を編集' : '薬を追加', appointment:value ? '通院記録を編集' : '通院を追加', journal:value ? '経過を編集' : '経過を記録'};
+  const titles = {medication:value ? '薬を編集' : '薬を追加', appointment:value ? '通院記録を編集' : '通院を追加', journal:value ? '経過を編集' : '経過を記録', dose:'服用の記録を編集'};
   $('#editor-title').textContent = titles[type];
   let html = '';
   if (type === 'medication') {
@@ -255,12 +306,16 @@ function openEditor(type, value = null) {
       `<div class="inline">${field('診察・通院料金（円）', 'visitCost', v.visitCost, 'number', 'min="0" step="1"')}${field('処方薬料金（円）', 'prescriptionCost', v.prescriptionCost, 'number', 'min="0" step="1"')}</div>` +
       medicationPicker(v.medicationIDs) + field('診察で話したこと', 'notes', v.notes, 'textarea') + field('次回までにやること', 'actions', v.actions, 'textarea') +
       field('次回の通院日時（任意）', 'nextDate', localDateTime(v.nextDate), 'datetime-local');
+  } else if (type === 'dose') {
+    html = `<div class="list-row"><h3>${esc(value.name)}</h3><div class="meta">${doseDescription(value)}</div></div>` +
+      field('飲んだ日時', 'completedAt', localDateTime(value.completedAt), 'datetime-local', 'required') +
+      `<label class="field">状態<select name="status">${[['taken','服用'],['skipped','見送り']].map(([status, label]) => `<option value="${status}" ${value.status === status ? 'selected' : ''}>${label}</option>`).join('')}</select></label>`;
   } else {
     const v = value || {date:new Date().toISOString(), condition:3, symptoms:'', note:''};
     html = field('日時', 'date', localDateTime(v.date), 'datetime-local', 'required') + field('体調（1〜5）', 'condition', v.condition, 'number', 'min="1" max="5" required') +
       field('症状', 'symptoms', v.symptoms, 'textarea') + field('メモ', 'note', v.note, 'textarea');
   }
-  $('#editor-fields').innerHTML = `<div class="form-group">${html}</div>${value ? '<button type="button" id="delete-record" class="danger delete-button">削除</button>' : ''}`;
+  $('#editor-fields').innerHTML = `<div class="form-group">${html}</div>${value ? `<button type="button" id="delete-record" class="danger delete-button">${type === 'dose' ? 'この記録を消す' : '削除'}</button>` : ''}`;
   if (value) $('#delete-record').onclick = deleteEditing;
   dialog.showModal();
 }
@@ -273,6 +328,7 @@ function deleteEditing() {
   const {type, id} = editing;
   const message = type === 'medication' ? 'この薬を削除しますか？過去の服用記録は薬名つきで残ります。通院記録の「処方された薬」からは、この薬が消えます。' : 'この記録を削除しますか？この操作は取り消せません。';
   if (!confirm(message)) return;
+  if (type === 'dose') { undoDose(id); dialog.close(); return; }
   const key = {medication:'medications', appointment:'appointments', journal:'journal'}[type];
   store[key] = store[key].filter(x => x.id !== id);
   if (type === 'medication') store.appointments.forEach(a => { a.medicationIDs = a.medicationIDs.filter(m => m !== id); });
@@ -297,6 +353,9 @@ form.onsubmit = e => {
     if (!data.hospital.trim()) return;
     upsert(store.appointments, {...base, hospital:data.hospital.trim(), date:savedDate('date', data.date), visitCost:Math.max(0, Number(data.visitCost)||0),
       prescriptionCost:Math.max(0, Number(data.prescriptionCost)||0), medicationIDs:formData.getAll('medicationIDs'), notes:data.notes, actions:data.actions, nextDate:savedDate('nextDate', data.nextDate)});
+  } else if (editing.type === 'dose') {
+    if (!data.completedAt || !Number.isFinite(new Date(data.completedAt).getTime())) return;
+    updateDose(editing.id, savedDate('completedAt', data.completedAt), data.status);
   } else {
     upsert(store.journal, {...base, date:savedDate('date', data.date), condition:Math.min(5, Math.max(1, Number(data.condition))), symptoms:data.symptoms, note:data.note});
   }
@@ -315,7 +374,7 @@ app.addEventListener('click', e => {
   if (!target) return;
   const {action, id, time} = target.dataset;
   if (action.startsWith('edit-')) {
-    const type = action.slice(5), key = {medication:'medications', appointment:'appointments', journal:'journal'}[type];
+    const type = action.slice(5), key = {medication:'medications', appointment:'appointments', journal:'journal', dose:'doseLogs'}[type];
     openEditor(type, store[key].find(x => x.id === id));
   } else if (action === 'take' || action === 'skip' || action === 'as-needed') {
     recordDose(store.medications.find(m => m.id === id), action === 'skip' ? 'skipped' : 'taken', time, action === 'as-needed');
@@ -329,6 +388,8 @@ app.addEventListener('click', e => {
     const next = action === 'return-today' ? today : shiftedDay(selectedDay, action === 'previous-day' ? -1 : 1);
     if (dayDate(next) <= dayDate(today)) { selectedDay = next; followToday = selectedDay === today; render(); }
   } else if (action === 'chart-days') { chartDays = Number(id); render(); }
+  else if (action === 'journal-view') { journalView = id; render(); }
+  else if (action === 'more-doses') { doseHistoryDays += 14; render(); }
   else if (action === 'calendar') addCalendar(id);
   else if (action === 'export') exportBackup();
   else if (action === 'import') $('#backup-input').click();
@@ -337,6 +398,7 @@ app.addEventListener('keydown', e => {
   if (e.target.matches('[role="button"]') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.target.click(); }
 });
 app.addEventListener('change', e => {
+  if (e.target.id === 'dose-medication') { doseMedication = e.target.value; doseHistoryDays = 14; render(); }
   if (e.target.id === 'notification-details') { store.settings.showNotificationDetails = e.target.checked; save(); }
 });
 function exportBackup() {
