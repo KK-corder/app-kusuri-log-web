@@ -7,7 +7,7 @@
 | カテゴリ | アプリ |
 | 状態 | 使える |
 | 作る環境 | Mac（Dev） |
-| 公開 | 公開（https://kk-corder.github.io/kusuri-log-web/） |
+| 公開 | 公開（https://kk-corder.github.io/app-kusuri-log-web/） |
 
 ## 何か
 
@@ -64,4 +64,4 @@ node --test tests/
 ## 状態と次の一手
 
 - 2026-10-18 服用履歴の一覧を追加。細かい TODO は `_TODO.md`
-- リポジトリ名は、本人が iPhone で記録を書き出したあと `app-kusuri-log-web` に変える（公開URLも変わるので、ホーム画面に追加し直してバックアップを読み込む）
+- 2026-10-20 リポジトリ名を `app-kusuri-log-web` に変えた。公開URLも変わったので、ホーム画面に追加し直してバックアップを読み込む（旧URL の kusuri-log-web は開けない）

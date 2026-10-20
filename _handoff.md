@@ -5,8 +5,8 @@
 
 ## 公開先
 
-- アプリ: https://kk-corder.github.io/kusuri-log-web/
-- リポジトリ: https://github.com/KK-corder/kusuri-log-web
+- アプリ: https://kk-corder.github.io/app-kusuri-log-web/（2026-10-20 に名前を変えた）
+- リポジトリ: https://github.com/KK-corder/app-kusuri-log-web
 - GitHub Pages: `main` ブランチの `/`
 
 ## 現在の機能
